@@ -3,45 +3,53 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 # File path
-file_path = "/Users/ksarna/Downloads/house_prices.csv"
+file_path = "/Users/anagireddygari/Desktop/Econ Final/FML_Private/VNQ.csv"
+
 
 df = pd.read_csv(file_path)
 
-# need dates in some date time format that can be plotted
-dates = []
-for row,index in df.iterrows():
-    for i,date in enumerate(row): 
-        if i >= 5:
-            dates.append(date)
-    break
-dates.append('2024-03-31')
+dates = df.columns[1:]
+house_prices = df.iloc[0].values[1:]
 
-iterator = df.iterrows()
-next(iterator)# Skip the first row
-house_prices = [] # list of lists - each list is sequence of house prices
-# train on first 500 regions, test on last 395
-# input is first 150 prices, label is next 141
-train_prices = []
-train_prices_labels = []
-test_prices = []
-test_prices_labels = []
-j = 1
-for index, row in iterator:
-    total_time_series = []
-    last = float(row[0])
-    for i, price in enumerate(index):
-        if i >= 5:# Skip the first 5 iterations
-            price = float(price)
-            total_time_series.append(price)
-    total_time_series.append(last)
-    if j<=500: # training data
-        train_prices.append(total_time_series[:150])
-        train_prices_labels.append(total_time_series[150:])
-    else: # test data
-        test_prices.append(total_time_series[:150])
-        test_prices_labels.append(total_time_series[150:])
-    house_prices.append(total_time_series)
-    j += 1
+print(df.T.to_string())
+rgrwg
+#print(house_prices)
+
+# # need dates in some date time format that can be plotted
+# dates = []
+# for row,index in df.iterrows():
+#     for i,date in enumerate(row): 
+#         if i >= 5:
+#             dates.append(date)
+#     break
+# dates.append('2024-03-31')
+
+# iterator = df.iterrows()
+# next(iterator)# Skip the first row
+# house_prices = [] # list of lists - each list is sequence of house prices
+# # train on first 500 regions, test on last 395
+# # input is first 150 prices, label is next 141
+# train_prices = []
+# train_prices_labels = []
+# test_prices = []
+# test_prices_labels = []
+# j = 1
+# for index, row in iterator:
+#     total_time_series = []
+#     last = float(row[0])
+#     for i, price in enumerate(index):
+#         if i >= 5:# Skip the first 5 iterations
+#             price = float(price)
+#             total_time_series.append(price)
+#     total_time_series.append(last)
+#     if j<=500: # training data
+#         train_prices.append(total_time_series[:150])
+#         train_prices_labels.append(total_time_series[150:])
+#     else: # test data
+#         test_prices.append(total_time_series[:150])
+#         test_prices_labels.append(total_time_series[150:])
+#     house_prices.append(total_time_series)
+#     j += 1
 
 
 
@@ -144,8 +152,8 @@ print(X.shape, y.shape)
 # 7 time steps back
 # x is the 7 previous values
 # y is the "current" value
-#print(X[100])
-#print(y[100]()
+print(X[100])
+#print(y[100])()
 # [-0.45990756 -0.43743811 -0.41579209 -0.3940857  -0.37252854 -0.35360555
 #  -0.33486112]
 # -0.4843011665370893
