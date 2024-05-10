@@ -98,11 +98,11 @@ def prepare_dataframe_for_lstm(df, n_steps):
 
     return df
 
-def prepare_data(column):
+def prepare_data(row):
 
     data = {
         'Date': dates,
-        'Price': house_prices[column]
+        'Price': house_prices[row]
     }
 
     df = pd.DataFrame(data)
@@ -126,16 +126,16 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 from copy import deepcopy as dc
 
 
-X = np.array([])
-y = np.array([])
-for i in range(10):
-    X_temp, y_temp = prepare_data(i)
-    X_temp = np.array(X_temp)
-    y_temp = np.array(y_temp)
-    X = np.concatenate((X, X_temp), axis=0) if X.size else X_temp
-    y = np.concatenate((y, y_temp), axis=0) if y.size else y_temp
+# X = np.array([])
+# y = np.array([])
+# for i in range(10):
+#     X_temp, y_temp = prepare_data(i)
+#     X_temp = np.array(X_temp)
+#     y_temp = np.array(y_temp)
+#     X = np.concatenate((X, X_temp), axis=0) if X.size else X_temp
+#     y = np.concatenate((y, y_temp), axis=0) if y.size else y_temp
 
-
+X, y = prepare_data(1) # ETF we want on row 1
 
 
 print(X.shape, y.shape)
