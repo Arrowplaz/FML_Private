@@ -3,53 +3,60 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 # File path
-file_path = "/Users/anagireddygari/Desktop/Econ Final/FML_Private/VNQ.csv"
+
+#******CHANGE THIS*******
+file_path = "/Users/anagireddygari/Desktop/Econ Final/FML_Private/test.csv"
+# file_path = "/Users/anagireddygari/Desktop/Econ Final/FML_Private/VNQ.csv"
 
 
+#*******THIS IS NECESSARY FOR READING THE STOCK DATA
 df = pd.read_csv(file_path)
 
-dates = df.columns[1:]
-house_prices = df.iloc[0].values[1:]
 
-print(df.T.to_string())
-rgrwg
-#print(house_prices)
+# dates = df.columns[1:].tolist()
+# house_prices = df.iloc[0].values[1:]
 
-# # need dates in some date time format that can be plotted
-# dates = []
-# for row,index in df.iterrows():
-#     for i,date in enumerate(row): 
-#         if i >= 5:
-#             dates.append(date)
-#     break
-# dates.append('2024-03-31')
+# print(house_prices)
 
-# iterator = df.iterrows()
-# next(iterator)# Skip the first row
-# house_prices = [] # list of lists - each list is sequence of house prices
-# # train on first 500 regions, test on last 395
-# # input is first 150 prices, label is next 141
-# train_prices = []
-# train_prices_labels = []
-# test_prices = []
-# test_prices_labels = []
-# j = 1
-# for index, row in iterator:
-#     total_time_series = []
-#     last = float(row[0])
-#     for i, price in enumerate(index):
-#         if i >= 5:# Skip the first 5 iterations
-#             price = float(price)
-#             total_time_series.append(price)
-#     total_time_series.append(last)
-#     if j<=500: # training data
-#         train_prices.append(total_time_series[:150])
-#         train_prices_labels.append(total_time_series[150:])
-#     else: # test data
-#         test_prices.append(total_time_series[:150])
-#         test_prices_labels.append(total_time_series[150:])
-#     house_prices.append(total_time_series)
-#     j += 1
+# need dates in some date time format that can be plotted
+dates = []
+#Iterates over each row to grab the date
+for row,index in df.iterrows():
+    for i,date in enumerate(row): 
+        if i >= 5: #Skips the first couple columns
+            dates.append(date)
+    break #Break lets us stop after 1 row
+dates.append('2024-03-31')
+
+
+
+iterator = df.iterrows()
+next(iterator)# Skip the first row
+house_prices = [] # list of lists - each list is sequence of house prices
+# train on first 500 regions, test on last 395
+# input is first 150 prices, label is next 141
+train_prices = []
+train_prices_labels = []
+test_prices = []
+test_prices_labels = []
+j = 1
+for index, row in iterator: #Iterates over each row
+    total_time_series = [] #Holder for prices in each row
+    last = float(row[0]) #Gets the last price, why?
+    for i, price in enumerate(index):
+        if i >= 5:# Skip the first 5 iterations
+            price = float(price)
+            total_time_series.append(price)
+    total_time_series.append(last)
+    #Split the training data
+    if j<=500: # training data
+        train_prices.append(total_time_series[:150])
+        train_prices_labels.append(total_time_series[150:])
+    else: # test data
+        test_prices.append(total_time_series[:150])
+        test_prices_labels.append(total_time_series[150:])
+    house_prices.append(total_time_series)
+    j += 1
 
 
 
@@ -136,12 +143,13 @@ from copy import deepcopy as dc
 
 X = np.array([])
 y = np.array([])
-for i in range(10):
+for i in range(6):
     X_temp, y_temp = prepare_data(i)
     X_temp = np.array(X_temp)
     y_temp = np.array(y_temp)
     X = np.concatenate((X, X_temp), axis=0) if X.size else X_temp
     y = np.concatenate((y, y_temp), axis=0) if y.size else y_temp
+
 
 
 

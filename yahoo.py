@@ -11,7 +11,7 @@ dates = pd.bdate_range(today - pd.Timedelta(days=730), today)
     # tickers = f.read().splitlines()
 
 tickers = ['VNQ']
-full_data = yf.download(tickers[0], group_by='Ticker', start=dates[0].date(), end=dates[-1].date())
+full_data = yf.download(tickers[0], group_by='Ticker', start='2010-05-10', end='2012-05-08')
 
 
 # Select the first row
