@@ -26,7 +26,7 @@ for row,index in df.iterrows():
         if i >= 5: #Skips the first couple columns
             dates.append(date)
     break #Break lets us stop after 1 row
-dates.append('2024-03-31')
+# dates.append('2024-03-31')
 
 
 
@@ -42,12 +42,12 @@ test_prices_labels = []
 j = 1
 for index, row in iterator: #Iterates over each row
     total_time_series = [] #Holder for prices in each row
-    last = float(row[0]) #Gets the last price, why?
+    #last = float(row[0]) #Gets the last price, why?
     for i, price in enumerate(index):
         if i >= 5:# Skip the first 5 iterations
             price = float(price)
             total_time_series.append(price)
-    total_time_series.append(last)
+    #total_time_series.append(last)
     #Split the training data
     if j<=500: # training data
         train_prices.append(total_time_series[:150])
@@ -141,9 +141,10 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 from copy import deepcopy as dc
 
 
+#Get rid of this
 X = np.array([])
 y = np.array([])
-for i in range(6):
+for i in range(len(house_prices)):
     X_temp, y_temp = prepare_data(i)
     X_temp = np.array(X_temp)
     y_temp = np.array(y_temp)
@@ -153,7 +154,7 @@ for i in range(6):
 
 
 
-
+print('***SHAPE***')
 print(X.shape, y.shape)
 # (284,7) (284)
 # 284 days
