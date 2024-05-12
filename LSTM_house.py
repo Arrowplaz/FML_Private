@@ -113,11 +113,11 @@ def prepare_dataframe_for_lstm(df, n_steps):
 
     return df
 
-def prepare_data(column):
+def prepare_data(row):
 
     data = {
         'Date': dates,
-        'Price': house_prices[column]
+        'Price': house_prices[row]
     }
 
     df = pd.DataFrame(data)
@@ -141,7 +141,6 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 from copy import deepcopy as dc
 
 
-#Get rid of this
 X = np.array([])
 y = np.array([])
 for i in range(len(house_prices)):
@@ -150,7 +149,6 @@ for i in range(len(house_prices)):
     y_temp = np.array(y_temp)
     X = np.concatenate((X, X_temp), axis=0) if X.size else X_temp
     y = np.concatenate((y, y_temp), axis=0) if y.size else y_temp
-
 
 
 
