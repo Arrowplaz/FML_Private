@@ -1,174 +1,40 @@
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
-
-
-# File path
-
-#******CHANGE THIS*******
-file_path = "/Users/anagireddygari/Desktop/Econ Final/FML_Private/test.csv"
-# file_path = "/Users/anagireddygari/Desktop/Econ Final/FML_Private/VNQ.csv"
-
-
-#*******THIS IS NECESSARY FOR READING THE STOCK DATA
-df = pd.read_csv(file_path)
-
-
-# dates = df.columns[1:].tolist()
-# house_prices = df.iloc[0].values[1:]
-
-# print(house_prices)
-
-# need dates in some date time format that can be plotted
-dates = []
-#Iterates over each row to grab the date
-for row,index in df.iterrows():
-    for i,date in enumerate(row): 
-        if i >= 5: #Skips the first couple columns
-            dates.append(date)
-    break #Break lets us stop after 1 row
-# dates.append('2024-03-31')
-
-
-
-iterator = df.iterrows()
-next(iterator)# Skip the first row
-house_prices = [] # list of lists - each list is sequence of house prices
-# train on first 500 regions, test on last 395
-# input is first 150 prices, label is next 141
-train_prices = []
-train_prices_labels = []
-test_prices = []
-test_prices_labels = []
-j = 1
-for index, row in iterator: #Iterates over each row
-    total_time_series = [] #Holder for prices in each row
-    #last = float(row[0]) #Gets the last price, why?
-    for i, price in enumerate(index):
-        if i >= 5:# Skip the first 5 iterations
-            price = float(price)
-            total_time_series.append(price)
-    #total_time_series.append(last)
-    #Split the training data
-    if j<=500: # training data
-        train_prices.append(total_time_series[:150])
-        train_prices_labels.append(total_time_series[150:])
-    else: # test data
-        test_prices.append(total_time_series[:150])
-        test_prices_labels.append(total_time_series[150:])
-    house_prices.append(total_time_series)
-    j += 1
-
-
-
-# import matplotlib.pyplot as plt
-
-# plt.figure(figsize=(10, 6))  # Adjust the figure size
-
-# # Plot the data with a blue solid line and circular markers
-# plt.plot(dates[60:110], house_prices[0][60:110], marker='o', linestyle='-', color='b', linewidth=2, markersize=8, label='House Prices')
-
-# # Rotate x-axis labels for better readability
-# plt.xticks(rotation=45)
-
-# # Add grid lines for better visualization
-# plt.grid(True, linestyle='--', alpha=0.5)
-
-# # Add labels and title with larger font sizes
-# plt.xlabel('Date', fontsize=14)
-# plt.ylabel('Price ($)', fontsize=14)
-# plt.title('House Prices (US)', fontsize=16)
-
-# # Add legend
-# plt.legend(loc='upper left', fontsize=12)
-
-# # Automatically adjust subplot parameters to give specified padding
-# plt.tight_layout()
-
-# # Display the plot
-# plt.show()
-
-# https://medium.com/@mrconnor/time-series-forecasting-with-pytorch-predicting-stock-prices-81db0f4348ef
-
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import MinMaxScaler
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, Dataset
-from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error, mean_squared_error
-
-
-# create additional columns for n_steps previous time steps
-# now each row represents historical house values
-def prepare_dataframe_for_lstm(df, n_steps):
-    df = dc(df)
-
-    df.set_index('Date', inplace=True)
-
-    for i in range(1, n_steps+1):
-        df[f'Price(t-{i})'] = df['Price'].shift(i)
-
-    df.dropna(inplace=True)
-
-    return df
-
-def prepare_data(row):
-
-    data = {
-        'Date': dates,
-        'Price': house_prices[row]
-    }
-
-    df = pd.DataFrame(data)
-    lookback = 7
-    shifted_df = prepare_dataframe_for_lstm(df, lookback)
-    print(shifted_df)
-
-    shifted_df_as_np = shifted_df.to_numpy()
-
-
-    scaler = MinMaxScaler(feature_range=(-1, 1))
-    shifted_df_as_np = scaler.fit_transform(shifted_df_as_np)
-
-    X = shifted_df_as_np[:, 1:]
-    y = shifted_df_as_np[:, 0]
-
-    return X, y
+from process import prepare_data
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_squared_error
+import math
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 from copy import deepcopy as dc
 
+X, y = prepare_data(0, 7)
 
-X = np.array([])
-y = np.array([])
-for i in range(len(house_prices)):
-    X_temp, y_temp = prepare_data(i)
-    X_temp = np.array(X_temp)
-    y_temp = np.array(y_temp)
-    X = np.concatenate((X, X_temp), axis=0) if X.size else X_temp
-    y = np.concatenate((y, y_temp), axis=0) if y.size else y_temp
 
+print(X)
 
 
 print('***SHAPE***')
 print(X.shape, y.shape)
-# (284,7) (284)
-# 284 days
+# (...,7) (...)
 # 7 time steps back
 # x is the 7 previous values
 # y is the "current" value
-print(X[100])
-#print(y[100])()
-# [-0.45990756 -0.43743811 -0.41579209 -0.3940857  -0.37252854 -0.35360555
-#  -0.33486112]
+# print(X[100])
+# print(y[100])
+# [-0.45990756 -0.43743811 -0.41579209 -0.3940857  -0.37252854 -0.35360555
+#  -0.33486112]
 # -0.4843011665370893
-train_cu = int(X.shape[0]*0.9)
+train_cu = int(X.shape[0]*0.6)
 
 X_train = X[:train_cu]
+print(X_train)
 y_train = y[:train_cu]
 X_test = X[train_cu:]
+print(X_test)
 y_test = y[train_cu:]
 
 X_train = torch.tensor(X_train).unsqueeze(1).permute(0,2,1).float()
@@ -204,52 +70,114 @@ batch_size = 16
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-for _, batch in enumerate(train_loader):
-     x_batch, y_batch = batch[0].to(device), batch[1].to(device)
-     print(x_batch.shape, y_batch.shape)
-     break
+# for _, batch in enumerate(train_loader):
+#      x_batch, y_batch = batch[0].to(device), batch[1].to(device)
+#      print(x_batch.shape, y_batch.shape)
+#      break
 
 
-class DeepLSTM(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers):
+#####################################################################################
+# This was coded up just to help us understand how the inputs were passing through the LSTM
+# testing the effect of different numbers of layers was done using the nn.LSTM module
+class CustomLSTM(nn.Module):
+    def __init__(self, input_size, hidden_size):
+        super().__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        
+        #input gate weights
+        self.U_i = nn.Parameter(torch.Tensor(input_size, hidden_size))
+        self.V_i = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
+        self.b_i = nn.Parameter(torch.Tensor(hidden_size))
+        
+        #forget gate weights
+        self.U_f = nn.Parameter(torch.Tensor(input_size, hidden_size))
+        self.V_f = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
+        self.b_f = nn.Parameter(torch.Tensor(hidden_size))
+        
+        #cell state weights
+        self.U_c = nn.Parameter(torch.Tensor(input_size, hidden_size))
+        self.V_c = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
+        self.b_c = nn.Parameter(torch.Tensor(hidden_size))
+        
+        #output gate weights
+        self.U_o = nn.Parameter(torch.Tensor(input_size, hidden_size))
+        self.V_o = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
+        self.b_o = nn.Parameter(torch.Tensor(hidden_size))
+
+        # no weights for hidden state! (vanishing/exploding gradient)
+        
+        self.init_weights()
+        self.fc = nn.Linear(hidden_size, 1)
+
+                
+    def init_weights(self):
+        stdv = 1.0 / math.sqrt(self.hidden_size)
+        for weight in self.parameters():
+            weight.data.uniform_(-stdv, stdv)
+         
+    def forward(self, x, init_states=None):
+        
+        """
+        assumes x.shape represents (batch_size, sequence_size, input_size)
+        """
+        batch_size, seq_size, _ = x.size()
+        hidden_seq = []
+        
+        if init_states is None:
+            h_t, c_t = (
+                torch.zeros(batch_size, self.hidden_size).to(x.device),
+                torch.zeros(batch_size, self.hidden_size).to(x.device),
+            )
+        else:
+            h_t, c_t = init_states
+            
+        for t in range(seq_size):
+            x_t = x[:, t, :]
+            
+            i_t = torch.sigmoid(torch.matmul(x_t, self.U_i) + torch.matmul(h_t, self.V_i) + self.b_i)
+            f_t = torch.sigmoid(torch.matmul(x_t, self.U_f) + torch.matmul(h_t, self.V_f) + self.b_f)
+            g_t = torch.tanh(torch.matmul(x_t, self.U_c) + torch.matmul(h_t, self.V_c) + self.b_c)
+            o_t = torch.sigmoid(torch.matmul(x_t, self.U_o) + torch.matmul(h_t, self.V_o) + self.b_o)
+            c_t = f_t * c_t + i_t * g_t
+            h_t = o_t * torch.tanh(c_t)
+
+            
+            hidden_seq.append(h_t.unsqueeze(0))
+        
+        hidden_seq = torch.cat(hidden_seq, dim=0)
+        hidden_seq = hidden_seq.transpose(0, 1).contiguous()
+        out = self.fc(hidden_seq[:,-1,:])
+        return out
+#####################################################################################
+
+
+class LSTM(nn.Module):
+    def __init__(self, input_size, hidden_size, num_stacked_layers):
         super().__init__()
         self.hidden_size = hidden_size
-        self.num_layers = num_layers
+        self.num_stacked_layers = num_stacked_layers
 
-        # Define the first LSTM layer
-        self.lstm = nn.LSTM(input_size, hidden_size, batch_first=True)
+        self.lstm = nn.LSTM(input_size, hidden_size, num_stacked_layers, batch_first=True)
 
-        # Define additional LSTM layers
-        self.lstms = nn.ModuleList([nn.LSTM(hidden_size, hidden_size, batch_first=True) for _ in range(num_layers - 1)])
-
-        # Define the fully connected layer
         self.fc = nn.Linear(hidden_size, 1)
 
     def forward(self, x):
         batch_size = x.size(0)
+        h0 = torch.zeros(self.num_stacked_layers, batch_size, self.hidden_size).to(device)
+        c0 = torch.zeros(self.num_stacked_layers, batch_size, self.hidden_size).to(device)
 
-        # Initialize hidden and cell state for the first layer
-        h0 = torch.zeros(1, batch_size, self.hidden_size).to(device)
-        c0 = torch.zeros(1, batch_size, self.hidden_size).to(device)
-
-        # Pass input through the first LSTM layer
         out, _ = self.lstm(x, (h0, c0))
-
-        # Pass output through additional LSTM layers
-        for lstm in self.lstms:
-            out, _ = lstm(out, (h0, c0))
-
-        # Apply the fully connected layer
         out = self.fc(out[:, -1, :])
         return out
 
-# Usage
-num_layers = 1 # Adjust the depth of the model as needed
-model = DeepLSTM(1, 4, num_layers)
+model = LSTM(1, 64, 3)
+# model = CustomLSTM(1,64)
 model.to(device)
 
+
 learning_rate = 0.001
-num_epochs = 10
+num_epochs = 20
 loss_function = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -294,13 +222,18 @@ def accuracy():
     print('***************************************************')
     print()
 
+## train
 for epoch in range(num_epochs):
     train_one_epoch(epoch)
     accuracy()
 
+## testing (IIS)
 with torch.no_grad():
     predicted = model(X_train.to(device)).to('cpu').numpy()
 
+
+print("Y_train: ", y_train.shape)
+print("predicted: ", predicted.shape)
 plt.plot(y_train, label='Actual Value')
 plt.plot(predicted, label='Predicted Value')
 plt.xlabel('Day')
@@ -308,12 +241,87 @@ plt.ylabel('Value')
 plt.legend()
 plt.show()
 
+
+## testing (OOS)
 with torch.no_grad():
     predicted = model(X_test.to(device)).to('cpu').numpy()
 
+plt.plot(y_test, label='Actual Close')
+plt.plot(predicted, label='Predicted Close')
+plt.xlabel('Day')
+plt.ylabel('Close')
+plt.legend()
+plt.show()
+
+
+## Autoregressive forecasting
+
+# Initialize an empty list to store the predicted values
+predicted_values = []
+
+# Predict future values iteratively using autoregressive forecasting
+with torch.no_grad():
+    # Initialize the input sequence with the first 7 real data points from the test set
+    # print("X_test: ", X_test.shape)
+    print("X_test: ", X_test[0].shape)
+    print("X_test: ", X_test[1])
+    print("X_test: ", X_test[2])
+    print("X_test: ", X_test[3])
+    print("X_test: ", X_test[4])
+    print("X_test: ", X_test[5])
+    input_sequence = X_test[0].unsqueeze(0).to(device) 
+
+    # Define the number of future steps to predict
+    future_steps = len(y_test)
+
+    x = 2
+
+    for _ in range(future_steps):
+        # Predict the next data point using the model
+        predicted_value = model(input_sequence)
+        #add a random number between -0.05 and 0.05 to the predicted value every 4 times
+
+        #add some noise decay
+        if _ % x == 0:
+            #if there has been a positive trend between the last 2 days give some positive noise
+            #check if the predicted values exist
+            if len(predicted_values) > 2 and predicted_value.item() > predicted_values[-1] :
+                predicted_value += np.random.uniform(0.0025, 0.005)
+                print('positive noise')
+            #if there has been a negative trend between the last 2 days give some negative noise
+            elif len(predicted_values) > 2 and predicted_value.item() < predicted_values[-1]:
+                predicted_value -= np.random.uniform(0.0025, 0.005)
+                print('negative noise')
+            x = 2*x
+           
+
+        # Append the predicted value to the list
+        predicted_values.append(predicted_value.item())
+
+        # Update the input sequence by removing the first data point and appending the predicted value
+        input_sequence = torch.cat([input_sequence[:, 1:], predicted_value.unsqueeze(-1)], dim=1)  # Modify dimensions
+
+# Calculate the mean squared error
+mse = mean_squared_error(y_test, predicted_values)
+print('Mean Squared Error:', mse)
+
+
+# Plot the actual and predicted values
 plt.plot(y_test, label='Actual Value')
-plt.plot(predicted, label='Predicted Value')
+plt.plot(predicted_values, label='Predicted Value')
 plt.xlabel('Day')
 plt.ylabel('Value')
 plt.legend()
 plt.show()
+
+
+
+# with torch.no_grad():
+#     predicted = model(X_test.to(device)).to('cpu').numpy()
+
+# plt.plot(y_test, label='Actual Value')
+# plt.plot(predicted, label='Predicted Value')
+# plt.xlabel('Day')
+# plt.ylabel('Value')
+# plt.legend()
+# plt.show()
