@@ -95,17 +95,17 @@ class CustomLSTM(nn.Module):
         self.V_f = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
         self.b_f = nn.Parameter(torch.Tensor(hidden_size))
         
-        #cell state weights
-        self.U_c = nn.Parameter(torch.Tensor(input_size, hidden_size))
-        self.V_c = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
-        self.b_c = nn.Parameter(torch.Tensor(hidden_size))
+        #hidden state weights
+        self.U_h = nn.Parameter(torch.Tensor(input_size, hidden_size))
+        self.V_h = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
+        self.b_h = nn.Parameter(torch.Tensor(hidden_size))
         
         #output gate weights
         self.U_o = nn.Parameter(torch.Tensor(input_size, hidden_size))
         self.V_o = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
         self.b_o = nn.Parameter(torch.Tensor(hidden_size))
 
-        # no weights for hidden state! (vanishing/exploding gradient)
+        # no weights for cell state! (vanishing/exploding gradient)
         
         self.init_weights()
         self.fc = nn.Linear(hidden_size, 1)
@@ -137,7 +137,7 @@ class CustomLSTM(nn.Module):
             
             i_t = torch.sigmoid(torch.matmul(x_t, self.U_i) + torch.matmul(h_t, self.V_i) + self.b_i)
             f_t = torch.sigmoid(torch.matmul(x_t, self.U_f) + torch.matmul(h_t, self.V_f) + self.b_f)
-            g_t = torch.tanh(torch.matmul(x_t, self.U_c) + torch.matmul(h_t, self.V_c) + self.b_c)
+            g_t = torch.tanh(torch.matmul(x_t, self.U_h) + torch.matmul(h_t, self.V_h) + self.b_h)
             o_t = torch.sigmoid(torch.matmul(x_t, self.U_o) + torch.matmul(h_t, self.V_o) + self.b_o)
             c_t = f_t * c_t + i_t * g_t
             h_t = o_t * torch.tanh(c_t)
